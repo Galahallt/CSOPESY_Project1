@@ -29,9 +29,11 @@ typedef struct Process {
 } Process;
 
 Process* FCFS(Process* processes, int size) {
-  Process* result = malloc(sizeof(Process) * size);
-  int ctr = 0;
-  int totalTime = 0;
+  Process* result = malloc(sizeof(Process) * size); // allocate memory for result of process
+  
+  int ctr = 0;  // keep track of the number of processes
+
+  int totalTime = 0; // initialize total execution time of the processes
 
   while (ctr < size) {
     // store index of prioritized process
@@ -48,24 +50,30 @@ Process* FCFS(Process* processes, int size) {
     }
     
     // execute the chosen process
+
+    // allocate memory to start and end time struct and assign corresponding values
     p.execTimes = realloc(NULL, sizeof(ExecTime));
     (*p.execTimes).start = totalTime;
     (*p.execTimes).end = p.burstTime + totalTime;
+
+    // update number of execution of the process
     p.execTimesLength++;
 
+    // update waiting and burst time of the process and total time of execution
     p.waitingTime = totalTime - p.arrivalTime;
     totalTime += p.burstTime;
     p.burstTime = 0;
     
-    p.arrivalTime = INT_MAX;
+    p.arrivalTime = INT_MAX; // update arrival time of process to sentinel value
+    
+    processes[index] = p; // update process with new process values
 
-    processes[index] = p;
+    result[ctr] = p;  // store current process to the result
 
-    result[ctr] = p;
-    ctr++;
+    ctr++; // increment counter for process
   }
 
-  return result;
+  return result; // return the result which is an array of updated processes 
 }
 
 int main() {
@@ -96,10 +104,12 @@ int main() {
       Process* p = malloc(sizeof(Process) * Y);
       int processID, arrivalTime, burstTime;
       for (int i = 0; i < Y; i++) {
+        // validate inputs of text file
         if (!(fscanf(file, " %d %d %d", &processID, &arrivalTime, &burstTime))) {
           printf("Invalid inputs, check contents of %s", file);
           exit(1);
         } else {
+          // store inputs from text file to process struct
           p[i].id = processID;
           p[i].arrivalTime = arrivalTime;
           p[i].burstTime = burstTime;
@@ -109,10 +119,13 @@ int main() {
         }
       }
 
+      // close file
       fclose(file);
 
+      // store result of First-Come-First-Serve algorithm to a Process struct
       Process* resultFCFS = FCFS(p, Y);
 
+      // display the results of the First-Come-First-Serve algorithm
       for (int j = 0; j < Y; j++) {
         printf("P[%d] ", resultFCFS[j].id);
         for (int k = 0; k < resultFCFS[j].execTimesLength; k++) {
@@ -121,6 +134,7 @@ int main() {
         printf("Waiting time: %d\n", resultFCFS[j].waitingTime);
       }
 
+      // compute the average waiting time of the First-Come-First-Serve algorithm
       double avgTime = 0.0;
       for (int l = 0; l < Y; l++) {
         avgTime += (double) resultFCFS[l].waitingTime;
