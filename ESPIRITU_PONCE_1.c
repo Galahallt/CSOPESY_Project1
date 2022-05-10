@@ -76,7 +76,7 @@ Process* FCFS(Process* processes, int size) {
 }
 
 Process* SJF(Process* processes, int size) {
-    Process* result = malloc(sizeof(Process) * size); // allocate memory for result of process
+  Process* result = malloc(sizeof(Process) * size); // allocate memory for result of process
   
   int ctr = 0;  // keep track of the number of processes
 
