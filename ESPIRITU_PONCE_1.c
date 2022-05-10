@@ -38,9 +38,8 @@ Process* FCFS(Process* processes, int size) {
   while (ctr < size) {
     // store index of prioritized process
     int index = 0;
-    // initialize struct process
-    Process p = { .id = 0, .arrivalTime = INT_MAX, .burstTime = 0, 
-                .waitingTime = 0, .execTimesLength = 0, .execTimes = NULL };
+    // initialize process with a temporary arrivalTime reference
+    Process p = processes[0];
     // get process with shortest arrival time
     for (int i = 0; i < size; i++) {
       if (processes[i].arrivalTime < p.arrivalTime) {
@@ -65,6 +64,61 @@ Process* FCFS(Process* processes, int size) {
     p.burstTime = 0;
     
     p.arrivalTime = INT_MAX; // update arrival time of process to sentinel value
+    
+    processes[index] = p; // update process with new process values
+
+    result[ctr] = p;  // store current process to the result
+
+    ctr++; // increment counter for process
+  }
+
+  return result; // return the result which is an array of updated processes 
+}
+
+Process* SJF(Process* processes, int size) {
+    Process* result = malloc(sizeof(Process) * size); // allocate memory for result of process
+  
+  int ctr = 0;  // keep track of the number of processes
+
+  int totalTime = 0; // initialize total execution time of the processes
+
+  while (ctr < size) {
+    // store index of prioritized process
+    int index = 0;
+    // initialize process with a temporary arrivalTime reference
+    Process p = processes[0];
+    // get process with shortest arrival time
+    for (int i = 0; i < size; i++) {
+      // make sure that the process is already in the waiting queue
+      if (processes[i].arrivalTime <= totalTime) {
+          // prioritize lower burst time
+          if (processes[i].burstTime < p.burstTime) {
+            p = processes[i];
+            index = i;
+          }
+          // if equal burst time, prioritize arrival time
+          else if (processes[i].burstTime == p.burstTime && processes[i].arrivalTime < p.arrivalTime) {
+            p = processes[i];
+            index = i;
+          }
+        }
+      }
+    // execute the chosen process
+
+    // allocate memory to start and end time struct and assign corresponding values
+    p.execTimes = realloc(NULL, sizeof(ExecTime));
+    (*p.execTimes).start = totalTime;
+    (*p.execTimes).end = p.burstTime + totalTime;
+
+    // update number of execution of the process
+    p.execTimesLength++;
+
+    // update waiting and burst time of the process and total time of execution
+    p.waitingTime = totalTime - p.arrivalTime;
+    totalTime += p.burstTime;
+    p.burstTime = INT_MAX;
+    
+    p.arrivalTime = 0; // update arrival time of process to sentinel value
     
     processes[index] = p; // update process with new process values
 
@@ -123,7 +177,7 @@ int main() {
       fclose(file);
 
       // store result of First-Come-First-Serve algorithm to a Process struct
-      Process* resultFCFS = FCFS(p, Y);
+      Process* resultFCFS = SJF(p, Y);
 
       // display the results of the First-Come-First-Serve algorithm
       for (int j = 0; j < Y; j++) {
