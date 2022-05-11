@@ -32,6 +32,29 @@ typedef struct Process {
   ExecTime* execTimes;
 } Process;
 
+// HELPER FUNCTION. Prints the details of a given process.
+void printProcessDetails (Process p) {
+    printf ("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+    printf ("Process ID: %d\n", p.id);
+    printf ("Arrival Time: %d\n", p.arrivalTime);
+    printf ("Burst Time: %d\n", p.burstTime);
+    printf ("Waiting Time: %d\n", p.waitingTime);
+    printf ("# of Times Executed: %d\n", p.execTimesLength);
+    printf ("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n");
+}
+
+// HELPER FUNCTION. Prints the processing times of all the processes in a list.
+void printProcessTimes (Process* p, int processAmt) {
+    printf ("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+    for (int i = 0; i < processAmt; i++) {
+        printf("P[%d] ", p[i].id);
+        printf("Arrival Time = %d | ", p[i].arrivalTime);
+        printf("Remaining Time = %d | ", p[i].burstTime);
+        printf("Waiting Time = %d\n", p[i].waitingTime);
+    }
+    printf ("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n");
+}
+
 // Performs the First-Come First-Served Scheduling Algorithm.
 Process* performFCFS(Process* processes, int size) {
   Process* result = malloc(sizeof(Process) * size); // allocate memory for result of process
@@ -136,6 +159,108 @@ Process* performSJF(Process* processes, int size) {
   return result; // return the result which is an array of updated processes 
 }
 
+// Performs the Shortest Remaining Time First Scheduling Algorithm.
+Process* performSRTF (Process* processes, int processAmt) {
+  // array containing the results
+  Process* result = malloc(sizeof(Process) * processAmt);
+  // counter for the processes that finished executing
+  int processCtr = 0;
+  // current time of execution
+  int currTime = 0;
+  // index of process being executed
+  int index = 0;
+
+  // while all processes are not done executing
+  while (processCtr < processAmt) {
+    // where process will be stored
+    Process p;
+
+    // minimum burst time among processes
+    int minBurstTime = INT_MAX;
+    // if there is an executable process at the current time or not
+    int hasExecutableProcess = FALSE;
+    // get next process to execute
+    for (int i = 0; i < processAmt; i++) {
+      /**
+       * If:
+       * - not yet finished executing
+       * - arrived already
+       * - smaller burst time than current selected process
+       * then select this process
+       */
+      if (processes[i].burstTime > 0 &&
+          processes[i].arrivalTime <= currTime &&
+          processes[i].burstTime < minBurstTime) {
+        // copy process data
+        p = processes[i];
+        // update minimum burst time value
+        minBurstTime = processes[i].burstTime;
+        // get process index
+        index = i;
+        // indicate that there is an executable process
+        hasExecutableProcess = TRUE;
+      }
+    }
+
+    // if there are no executable processes
+    if (!hasExecutableProcess) {
+      // advance time
+      currTime++;
+      // skip this iteration
+      continue;
+    }
+
+    // allocate for start-end times
+    p.execTimes = realloc(p.execTimes, sizeof(ExecTime) * (p.execTimesLength + 1));
+    // set start time
+    p.execTimes[p.execTimesLength].start = currTime;
+    // compute for waiting time
+    p.waitingTime += currTime - p.arrivalTime;
+
+    // if the process is still executing or not
+    int isExecuting = TRUE;
+    // execute the process
+    while (isExecuting && p.burstTime > 0) {
+      // decrease remaining time of the process
+      p.burstTime--;
+      // advance time
+      currTime++;
+
+      // check if there are new processes that have a shorter remaining time
+      // than the current executing process
+      for (int i = 0; i < processAmt; i++)
+        if (processes[i].arrivalTime <= currTime &&
+            processes[i].burstTime < p.burstTime &&
+            processes[i].burstTime > 0) {
+          isExecuting = FALSE;
+          break;
+        }
+    }
+
+    // set end time
+    p.execTimes[p.execTimesLength].end = currTime;
+
+    // +1 in no. of times executed for this process
+    p.execTimesLength++;
+
+    // adjust arrival time for proper waiting time computation
+    p.arrivalTime = currTime;
+
+    // update process in input list
+    processes[index] = p;
+
+    // if process is finished executing
+    if (p.burstTime <= 0) {
+      // store process in result index
+      result[index] = p;
+      // increment no. of processes finished
+      processCtr++;
+    }
+  }
+
+  return result;
+}
+
 // Performs the Round Robin Scheduling Algorithm.
 Process* performRR (Process* processes, int processAmt, int quantum) {
   // array containing the results
@@ -147,6 +272,7 @@ Process* performRR (Process* processes, int processAmt, int quantum) {
   // index of process being executed
   int index = 0;
 
+  // while all processes are not done executing
   while (processCtr < processAmt) {
     // get current process
     Process p = processes[index];
@@ -282,7 +408,7 @@ int main() {
           results = performSJF(p, Y);
           break;
         case 2:
-          // results = performSRTF(p, Y);
+          results = performSRTF(p, Y);
           break;
         case 3:
           results = performRR(p, Y, Z);
