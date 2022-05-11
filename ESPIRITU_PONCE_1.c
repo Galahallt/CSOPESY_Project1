@@ -66,14 +66,31 @@ Process* performFCFS(Process* processes, int size) {
   while (ctr < size) {
     // store index of prioritized process
     int index = 0;
+
     // initialize process with a temporary arrivalTime reference
     Process p = processes[0];
+
+    // if there is an executable process at the current time or not
+    int hasExecutableProcess = FALSE;
+
     // get process with shortest arrival time
     for (int i = 0; i < size; i++) {
-      if (processes[i].arrivalTime < p.arrivalTime) {
-        p = processes[i];
-        index = i;
+      // check if the process is in the waiting queue and if the arrival time is lower than the reference
+      if (processes[i].arrivalTime <= totalTime) {
+        if (processes[i].arrivalTime < p.arrivalTime) {
+          p = processes[i];
+          index = i;
+        }
+        hasExecutableProcess = TRUE;
       }
+    }
+
+    // check if there are no executable processes
+    if (!hasExecutableProcess) {
+      // advance time
+      totalTime++;
+      // skip this iteration
+      continue;
     }
     
     // execute the chosen process
@@ -110,13 +127,18 @@ Process* performSJF(Process* processes, int size) {
   int ctr = 0;  // keep track of the number of processes
 
   int totalTime = 0; // initialize total execution time of the processes
-
+  
   while (ctr < size) {
     // store index of prioritized process
     int index = 0;
-    // initialize process with a temporary arrivalTime reference
+
+    // initialize process with a temporary burstTime reference
     Process p = processes[0];
-    // get process with shortest arrival time
+
+    // if there is an executable process at the current time or not
+    int hasExecutableProcess = FALSE;
+    
+    // get process with shortest burst time
     for (int i = 0; i < size; i++) {
       // make sure that the process is already in the waiting queue
       if (processes[i].arrivalTime <= totalTime) {
@@ -130,8 +152,18 @@ Process* performSJF(Process* processes, int size) {
             p = processes[i];
             index = i;
           }
+          hasExecutableProcess = TRUE;
         }
       }
+
+    // check if there are no executable processes
+    if (!hasExecutableProcess) {
+      // advance time
+      totalTime++;
+      // skip this iteration
+      continue;
+    }
+    
     // execute the chosen process
 
     // allocate memory to start and end time struct and assign corresponding values
@@ -147,7 +179,7 @@ Process* performSJF(Process* processes, int size) {
     totalTime += p.burstTime;
     p.burstTime = INT_MAX;
     
-    p.arrivalTime = 0; // update arrival time of process to sentinel value
+    p.arrivalTime = INT_MAX; // update arrival time of process to sentinel value
     
     processes[index] = p; // update process with new process values
 
