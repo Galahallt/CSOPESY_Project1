@@ -284,7 +284,7 @@ Process* performSRTF (Process* processes, int processAmt) {
     // if process is finished executing
     if (p.burstTime <= 0) {
       // store process in result index
-      result[index] = p;
+      result[processCtr] = p;
       // increment no. of processes finished
       processCtr++;
     }
@@ -352,7 +352,7 @@ Process* performRR (Process* processes, int processAmt, int quantum) {
       // if process is finished executing
       if (p.burstTime <= 0) {
         // store process in result index
-        result[index] = p;
+        result[processCtr] = p;
         // increment no. of processes finished
         processCtr++;
       }
