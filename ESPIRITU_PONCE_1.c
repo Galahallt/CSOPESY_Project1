@@ -322,21 +322,32 @@ Process* performRR (Process* processes, int processAmt, int quantum) {
       // set end time
       p.execTimes[p.execTimesLength].end = currTime + waitingTimeVal;
 
-      // increase wait times of all other processes
-      for (int i = 0; i < processAmt; i++) {
-        /**
-          * If process is:
-          * - not the same as the executing process
-          * - not yet finished executing
-          * - has arrived already
-          * then increase its waiting time
-          */
-        if (processes[i].id != p.id && 
-            processes[i].burstTime > 0 && 
-            processes[i].arrivalTime <= currTime) {
-          processes[i].waitingTime += waitingTimeVal;
+      // temporary time for one-by-one iteration
+      int tempTime = currTime;
+      // increase the waiting time of each eligible process one-by-one
+      while (tempTime < currTime + waitingTimeVal) {
+        // iterate through the list and check each process
+        for (int i = 0; i < processAmt; i++) {
+          /**
+            * If process is:
+            * - not the same as the executing process
+            * - not yet finished executing
+            * - has arrived already
+            * then increase its waiting time
+            */
+          if (processes[i].id != p.id && 
+              processes[i].burstTime > 0 && 
+              processes[i].arrivalTime <= tempTime) {
+            processes[i].waitingTime++;
+          }
         }
+
+        // advance temporary time
+        tempTime++;
       }
+
+      // increase actual time by waiting time value
+      currTime += waitingTimeVal;
 
       // decrease remaining time of process
       p.burstTime -= waitingTimeVal;
@@ -346,9 +357,6 @@ Process* performRR (Process* processes, int processAmt, int quantum) {
       // update process in input list
       processes[index] = p;
 
-      // increase time by waiting time value
-      currTime += waitingTimeVal;
-      
       // if process is finished executing
       if (p.burstTime <= 0) {
         // store process in result index
